@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+	<title>CHECKOUT URL GENERATOR</title>
+</head>
+
+<body>
+	<div id="url"></div>
+
+</body>
+
+</html>
+
+<script>
+	var products = [
+		{
+			id: '',
+			sellingPlanId: '',
+			quantity: 1,
+		},
+		{
+			id: '',
+			// sellingPlanId: '',
+			quantity: 1,
+		}
+	];
+	var url = '';
+	var discount = '';
+
+	checkoutUrlGenerator( url, products, discount );
+	function checkoutUrlGenerator(
+		storeUrl,
+		productsArray,
+		discountCode,
+	) {
+		if ( !storeUrl || !productsArray.length ) {
+			console.error( 'Store URL or Products Array is missing in checkoutUrlGenerator function' );
+			return;
+		}
+
+		// Create the base URL
+		var finalURL = 'http://' + storeUrl + '/cart/clear?return_to=';
+
+		// Add the product information to the URL
+		var sellingPlanItems = [];
+		var nonSellingPlanItems = [];
+
+		productsArray.forEach( ( product, i ) => {
+			if ( !product.id ) return;
+			var itemId = `items[${ i }][id]=${ encodeURIComponent( product.id ) }`;
+			var itemQty = `items[${ i }][quantity]=${ encodeURIComponent( product.quantity || 5 ) }`;
+			var itemSellingPlan = product.sellingPlanId
+				? `items[${ i }][selling_plan]=${ encodeURIComponent( product.sellingPlanId ) }`
+				: '';
+
+			if ( product.sellingPlanId ) {
+				sellingPlanItems.push( `${ itemId }&${ itemSellingPlan }&${ itemQty }` );
+			} else {
+				nonSellingPlanItems.push( `${ itemId }&${ itemQty }` );
+			}
+		} );
+
+		var items = [
+			...sellingPlanItems,
+			...nonSellingPlanItems
+		];
+
+		finalURL += encodeURIComponent( `/cart/add?${ items.join( '&' ) }` );
+
+		// Add the discount code to the URL
+		if ( discountCode ) {
+			finalURL += `%26discount=${ discountCode }`;
+		}
+
+		// Add the return_to parameter to the URL
+		finalURL += `%26return_to%3D%2Fcheckout`;
+
+		console.log( finalURL );
+		document.getElementById('url').innerText = finalURL;
+		return finalURL;
+	}
+
+
+</script>
